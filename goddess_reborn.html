@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goddess Reborn — Shards of Aelith</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
+
+  body {
+    background: #0a0612;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+  }
+
+  #title-screen {
+    position: absolute;
+    inset: 0;
+    background: #0a0612;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 24px;
+  }
+
+  .title-logo {
+    text-align: center;
+  }
+
+  .title-top {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #a08060;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    animation: fadeIn 2s ease;
+  }
+
+  .title-main {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    color: #f0d060;
+    text-shadow: 3px 3px 0 #804000, 6px 6px 0 #401800;
+    line-height: 1.4;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .title-sub {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #80c0ff;
+    letter-spacing: 4px;
+    margin-top: 8px;
+    animation: fadeIn 2.5s ease;
+  }
+
+  .title-stars {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+  }
+
+  .title-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .menu-item {
+    font-size: 11px;
+    color: #c0c0c0;
+    cursor: pointer;
+    padding: 8px 24px;
+    border: 2px solid transparent;
+    transition: all 0.1s;
+    text-align: center;
+  }
+
+  .menu-item.selected {
+    color: #f0d060;
+    border-color: #f0d060;
+    background: rgba(240,208,96,0.1);
+    text-shadow: 0 0 8px #f0d060;
+  }
+
+  .press-start {
+    font-size: 10px;
+    color: #f0d060;
+    animation: blink 1s step-end infinite;
+    margin-top: 10px;
+  }
+
+  #game-wrapper {
+    position: relative;
+    display: none;
+  }
+
+  #game-canvas {
+    display: block;
+    border: 3px solid #302040;
+    box-shadow: 0 0 40px rgba(120,60,200,0.4), 0 0 80px rgba(60,20,120,0.2);
+  }
+
+  #hud {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: linear-gradient(180deg, #0a0612 0%, rgba(10,6,18,0.95) 100%);
+    border-bottom: 2px solid #302040;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .hud-hearts {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .hud-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .hud-label {
+    font-size: 6px;
+    color: #806080;
+    letter-spacing: 1px;
+  }
+
+  .hud-value {
+    font-size: 9px;
+    color: #f0d060;
+  }
+
+  .hud-shards {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    max-width: 100px;
+  }
+
+  .shard-icon {
+    width: 8px;
+    height: 10px;
+    background: #302040;
+    clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
+    transition: background 0.3s;
+  }
+
+  .shard-icon.collected {
+    background: #80c0ff;
+    box-shadow: 0 0 4px #80c0ff;
+  }
+
+  #message-box {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    background: rgba(10,6,18,0.97);
+    border: 2px solid #f0d060;
+    padding: 10px 14px;
+    display: none;
+    z-index: 50;
+    box-shadow: inset 0 0 20px rgba(240,208,96,0.05);
+  }
+
+  .msg-portrait {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #604080;
+    float: left;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .msg-name {
+    font-size: 7px;
+    color: #f0d060;
+    margin-bottom: 4px;
+  }
+
+  .msg-text {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #e0e0e0;
+    line-height: 1.4;
+  }
+
+  .msg-continue {
+    font-size: 7px;
+    color: #806080;
+    text-align: right;
+    margin-top: 4px;
+    animation: blink 0.8s step-end infinite;
+  }
+
+  #minimap {
+    position: absolute;
+    top: 56px;
+    right: 8px;
+    background: rgba(10,6,18,0.9);
+    border: 2px solid #302040;
+    padding: 4px;
+  }
+
+  #skill-hud {
+    position: absolute;
+    bottom: 70px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+
+  .skill-slot {
+    width: 36px;
+    height: 36px;
+    background: rgba(10,6,18,0.9);
+    border: 2px solid #302040;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    position: relative;
+  }
+
+  .skill-slot.active { border-color: #f0d060; }
+  .skill-key {
+    position: absolute;
+    bottom: 1px; right: 2px;
+    font-size: 6px;
+    color: #806080;
+  }
+
+  #dungeon-clear {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 80;
+  }
+
+  .clear-title {
+    font-size: 20px;
+    color: #f0d060;
+    text-shadow: 0 0 20px #f0d060;
+    animation: glow 1s ease-in-out infinite alternate;
+  }
+
+  .shard-reveal {
+    width: 60px;
+    height: 74px;
+    background: #80c0ff;
+    clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
+    box-shadow: 0 0 30px #80c0ff, 0 0 60px #4080ff;
+    animation: shardPulse 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes glow { from { text-shadow: 3px 3px 0 #804000, 0 0 10px rgba(240,208,96,0.3); } to { text-shadow: 3px 3px 0 #804000, 0 0 30px rgba(240,208,96,0.8); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes twinkle { from { opacity: 0.2; } to { opacity: 1; } }
+  @keyframes shardPulse { from { box-shadow: 0 0 20px #80c0ff; } to { box-shadow: 0 0 60px #80c0ff, 0 0 100px #4080ff; } }
+  @keyframes fireAnim { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1) rotate(5deg);} }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
+  @keyframes flash { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen">
+  <div class="title-stars" id="stars"></div>
+  <div class="title-logo">
+    <div class="title-top">✦ A Legend of Aelith ✦</div>
+    <div class="title-main">GODDESS<br>REBORN</div>
+    <div class="title-sub">— Shards of Aelith —</div>
+  </div>
+  <canvas id="title-canvas" width="200" height="80" style="image-rendering:pixelated;"></canvas>
+  <div class="press-start">PRESS ENTER TO BEGIN</div>
+  <div style="font-size:7px;color:#504050;margin-top:20px;text-align:center;">
+    FIND ALL 8 SHARDS · RESTORE THE GODDESS · SAVE THE WORLD
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-wrapper">
+  <div id="hud">
+    <div class="hud-section">
+      <div class="hud-label">LIFE</div>
+      <div class="hud-hearts" id="hearts-display"></div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hud-section">
+      <div class="hud-label">SHARDS</div>
+      <div class="hud-shards" id="shards-display"></div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hud-section">
+      <div class="hud-label">AREA</div>
+      <div class="hud-value" id="area-name">WORLD MAP</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hud-section">
+      <div class="hud-label">GOLD</div>
+      <div class="hud-value" id="gold-display">0</div>
+    </div>
+  </div>
+  <canvas id="game-canvas"></canvas>
+  <div id="skill-hud">
+    <div class="skill-slot active" id="slot-fire" title="Fireball (X)">🔥<span class="skill-key">X</span></div>
+    <div class="skill-slot" id="slot-sword" title="Sword (Z)">⚔️<span class="skill-key">Z</span></div>
+  </div>
+  <canvas id="minimap" width="80" height="80"></canvas>
+  <div id="message-box">
+    <canvas class="msg-portrait" id="msg-portrait" width="40" height="40"></canvas>
+    <div class="msg-name" id="msg-name">???</div>
+    <div class="msg-text" id="msg-text"></div>
+    <div class="msg-continue">▼ press ENTER</div>
+  </div>
+  <div id="dungeon-clear">
+    <div class="clear-title">DUNGEON CLEAR!</div>
+    <div class="shard-reveal"></div>
+    <div style="font-size:10px;color:#80c0ff;" id="shard-name-text">Soul Shard Obtained!</div>
+    <div style="font-size:8px;color:#a0a0a0;margin-top:10px;">press ENTER to continue</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  GODDESS REBORN — Full Game Engine
+//  Pure Canvas, no libraries
+// ============================================================
+
+const TILE = 16;
+const CANVAS_W = 512;
+const CANVAS_H = 432;
+const HUD_H = 48;
+
+// ── Palette ──────────────────────────────────────────────
+const PAL = {
+  black:    '#000000', void_:   '#0a0612',
+  grass:    '#286830', grass2:  '#307838', grass3:  '#38903f',
+  dirt:     '#8B6040', dirt2:   '#7a5030',
+  stone:    '#606880', stone2:  '#505870', stone3:  '#404860',
+  stoneLt:  '#8090a0', stoneHl: '#a0b0c0',
+  water:    '#1848a0', water2:  '#2060c0', waterFm: '#40a0e0',
+  sand:     '#c8a060', sand2:   '#e0b870',
+  tree:     '#184820', treeTk:  '#3c2810',
+  flower:   '#d04080', flower2: '#f060a0',
+  chest:    '#c8a020', chestDk: '#806010',
+  gold_:    '#f0d060', gold2:   '#c0a040',
+  red:      '#c83020', redBr:   '#802010',
+  blue_:    '#2080c0', blueLt:  '#40c0f0',
+  purple:   '#8030c0', purpleLt:'#b060f0',
+  white:    '#ffffff', ltGray:  '#c0c0c0', gray:    '#808080',
+  darkGray: '#404040', darkest: '#202020',
+  fire1:    '#ff6020', fire2:   '#ffA020', fire3:   '#ffE060',
+  dungeon1: '#483028', dungeon2:'#302018', dungeon3:'#201808',
+  dng1Lt:   '#806040', dng1Hl:  '#a08060',
+  lava:     '#c03000', lava2:   '#e05000',
+  ice:      '#a0d0ff', ice2:    '#c0e8ff',
+  crystal:  '#80c0ff', crystal2:'#b0e0ff',
+  npc_skin: '#f0c090', npc_hair:'#603010',
+  hero_skin:'#f0c090', hero_h:  '#d09020',
+  shadow:   'rgba(0,0,0,0.4)',
+  shard:    '#80c0ff',
+};
+
+// ── Utility ──────────────────────────────────────────────
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function rectOverlap(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
+}
+
+// ── Pixel-art draw helpers ────────────────────────────────
+function fillRect(ctx,x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+function px(ctx,x,y,c){ ctx.fillStyle=c; ctx.fillRect(x,y,1,1); }
+
+function drawHero(ctx, x, y, dir, frame, invincible) {
+  if(invincible && Math.floor(Date.now()/100)%2===0) return;
+  const flip = dir === 3; // left
+  ctx.save();
+  if(flip){ ctx.translate(x+8,y); ctx.scale(-1,1); x=0; }
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(x+2,y+14,12,3);
+  // body tunic (green)
+  fillRect(ctx,x+3,y+7,10,7,'#206820');
+  // belt
+  fillRect(ctx,x+3,y+12,10,2,'#8B6040');
+  // skin
+  fillRect(ctx,x+4,y+2,8,6,PAL.hero_skin); // head
+  // hat
+  fillRect(ctx,x+3,y+1,10,3,PAL.hero_h);
+  fillRect(ctx,x+5,y+0,6,2,PAL.hero_h);
+  // hat shadow
+  fillRect(ctx,x+3,y+3,10,1,'#a06010');
+  // eyes
+  if(dir===1){ // down
+    px(ctx,x+5,y+5,'#302010'); px(ctx,x+8,y+5,'#302010');
+  } else if(dir===0){ // up
+    // back of head, show brim
+  } else { // side
+    px(ctx,x+7,y+5,'#302010');
+  }
+  // arms
+  const armY = dir===0 ? y+8 : y+7;
+  fillRect(ctx,x+1,armY,2,5,PAL.hero_skin);
+  fillRect(ctx,x+13,armY,2,5,PAL.hero_skin);
+  // sword arm (animated)
+  if(frame%2===0 && dir===3||dir===1){
+    fillRect(ctx,x+13,armY-2,2,8,PAL.hero_skin);
+  }
+  // legs
+  const legOff = [0,1,0,-1][frame%4];
+  fillRect(ctx,x+4,y+14,3,4,PAL.hero_h);
+  fillRect(ctx,x+9,y+14,3,4,PAL.hero_h);
+  fillRect(ctx,x+4,y+17+legOff,3,1,'#604010');
+  fillRect(ctx,x+9,y+17-legOff,3,1,'#604010');
+  ctx.restore();
+}
+
+function drawSword(ctx, x, y, dir, swingFrame) {
+  ctx.save();
+  ctx.strokeStyle = '#c0d0e0';
+  ctx.lineWidth = 2;
+  const prog = swingFrame/8;
+  let sx=x+8, sy=y+8, ex=x+8, ey=y+8;
+  if(dir===1){ ex=x+8; ey=y+28; sx=x+18; sy=y+5; }
+  else if(dir===0){ ex=x+8; ey=y-12; sx=x-2; sy=y+5; }
+  else if(dir===2){ ex=x+24; ey=y+8; }
+  else if(dir===3){ ex=x-8; ey=y+8; }
+  // blade
+  ctx.beginPath(); ctx.moveTo(sx+(ex-sx)*0.3,sy+(ey-sy)*0.3);
+  ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(sx+(ex-sx)*0.3+1,sy+(ey-sy)*0.3);
+  ctx.lineTo(ex+1,ey); ctx.stroke();
+  ctx.restore();
+}
+
+function drawFireball(ctx, x, y, t) {
+  const r = Math.sin(t*0.2)*2;
+  fillRect(ctx,x-5+r,y-5,10-r*2,10,PAL.fire1);
+  fillRect(ctx,x-3,y-3,6,6,PAL.fire2);
+  fillRect(ctx,x-2,y-2,4,4,PAL.fire3);
+}
+
+function drawEnemy(ctx, x, y, type, frame, hp, maxHp) {
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(x+2,y+12,12,3);
+  const bob = Math.sin(frame*0.15)*1;
+  if(type==='slime'){
+    // slime body
+    fillRect(ctx,x+2,y+6+bob,12,8,PAL.purple);
+    fillRect(ctx,x+1,y+8+bob,14,4,PAL.purpleLt);
+    // eyes
+    fillRect(ctx,x+4,y+7+bob,2,2,PAL.white);
+    fillRect(ctx,x+10,y+7+bob,2,2,PAL.white);
+    px(ctx,x+4,y+8+bob,PAL.black); px(ctx,x+10,y+8+bob,PAL.black);
+    // mouth
+    for(let i=0;i<4;i++) px(ctx,x+5+i,y+10+bob,'#4a1080');
+  } else if(type==='skeleton'){
+    // skull
+    fillRect(ctx,x+4,y+2+bob,8,8,PAL.ltGray);
+    fillRect(ctx,x+3,y+4+bob,10,5,PAL.white);
+    fillRect(ctx,x+5,y+8+bob,2,2,PAL.black); // eye
+    fillRect(ctx,x+9,y+8+bob,2,2,PAL.black); // eye
+    // teeth
+    for(let i=0;i<3;i++) fillRect(ctx,x+5+i*2,y+10+bob,1,2,PAL.white);
+    // body
+    fillRect(ctx,x+5,y+10+bob,6,5,PAL.ltGray);
+    fillRect(ctx,x+3,y+11+bob,2,4,PAL.ltGray);
+    fillRect(ctx,x+11,y+11+bob,2,4,PAL.ltGray);
+    // legs
+    fillRect(ctx,x+5,y+15+bob,3,3,PAL.ltGray);
+    fillRect(ctx,x+8,y+15+bob,3,3,PAL.ltGray);
+  } else if(type==='bat'){
+    // wings
+    fillRect(ctx,x,y+4+bob,6,4,PAL.darkGray);
+    fillRect(ctx,x+10,y+4+bob,6,4,PAL.darkGray);
+    const wf=Math.sin(frame*0.3)*3;
+    fillRect(ctx,x,y+4+bob-wf,6,wf+2,PAL.gray);
+    fillRect(ctx,x+10,y+4+bob-wf,6,wf+2,PAL.gray);
+    // body
+    fillRect(ctx,x+5,y+3+bob,6,8,PAL.darkGray);
+    fillRect(ctx,x+6,y+4+bob,4,6,'#302030');
+    // eyes
+    px(ctx,x+6,y+5+bob,PAL.red); px(ctx,x+9,y+5+bob,PAL.red);
+  } else if(type==='golem'){
+    // large rock golem boss
+    fillRect(ctx,x,y,16,16,PAL.stone2);
+    fillRect(ctx,x+1,y+1,14,14,PAL.stone);
+    fillRect(ctx,x+2,y+2,12,12,PAL.stoneLt);
+    fillRect(ctx,x+3,y+4,10,4,PAL.stone2); // face dark
+    fillRect(ctx,x+4,y+5,3,2,PAL.red); // eye
+    fillRect(ctx,x+9,y+5,3,2,PAL.red); // eye
+    // cracks
+    ctx.strokeStyle=PAL.stone3; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x+8,y+3); ctx.lineTo(x+10,y+8); ctx.stroke();
+    // arms
+    fillRect(ctx,x-4,y+2+bob,6,12,PAL.stone);
+    fillRect(ctx,x+14,y+2+bob,6,12,PAL.stone);
+    // mouth
+    fillRect(ctx,x+4,y+9,8,2,PAL.black);
+    for(let i=0;i<4;i++) fillRect(ctx,x+4+i*2,y+9,1,2,PAL.stone3);
+  } else if(type==='lavaslug'){
+    fillRect(ctx,x+1,y+8+bob,14,7,PAL.lava);
+    fillRect(ctx,x+2,y+9+bob,12,5,PAL.fire1);
+    fillRect(ctx,x+4,y+8+bob,3,2,PAL.black); // eye
+    fillRect(ctx,x+10,y+8+bob,3,2,PAL.black);
+    for(let i=0;i<5;i++) px(ctx,x+2+i*2,y+14+bob,PAL.lava2);
+  } else if(type==='icewolf'){
+    // body
+    fillRect(ctx,x+2,y+4+bob,12,8,PAL.ice);
+    fillRect(ctx,x+3,y+5+bob,10,6,PAL.ice2);
+    fillRect(ctx,x+1,y+5+bob,3,4,PAL.ice); // head
+    fillRect(ctx,x+0,y+6+bob,2,2,PAL.black); // snout
+    px(ctx,x+2,y+5+bob,PAL.red); // eye
+    // legs
+    fillRect(ctx,x+3,y+11+bob,2,3,PAL.ice);
+    fillRect(ctx,x+7,y+11+bob,2,3,PAL.ice);
+    fillRect(ctx,x+11,y+11+bob,2,3,PAL.ice);
+    // tail
+    fillRect(ctx,x+13,y+4+bob,3,5,PAL.ice);
+    fillRect(ctx,x+14,y+3+bob,2,2,PAL.ice2);
+  }
+  // HP bar above enemy
+  const bw=14; const bhp=Math.round(bw*hp/maxHp);
+  fillRect(ctx,x+1,y-5,bw,3,PAL.darkest);
+  fillRect(ctx,x+1,y-5,bhp,3,hp/maxHp>0.5?'#20c040':'#c04020');
+}
+
+function drawNPC(ctx, x, y, type, frame) {
+  ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(x+2,y+13,12,3);
+  const bob = Math.sin(frame*0.05)*0.5;
+  if(type==='elder'){
+    // robes
+    fillRect(ctx,x+3,y+7,10,8,'#6040a0');
+    fillRect(ctx,x+2,y+9,12,6,'#5030a0');
+    // head
+    fillRect(ctx,x+4,y+2,8,6,PAL.npc_skin);
+    // white beard
+    fillRect(ctx,x+4,y+7,8,4,PAL.white);
+    // hat (wizard)
+    fillRect(ctx,x+3,y+0,10,3,'#302060');
+    fillRect(ctx,x+5,y-3,6,4,'#302060');
+    fillRect(ctx,x+2,y+1,12,1,'#5040a0');
+    // eyes
+    px(ctx,x+5,y+4,'#304080'); px(ctx,x+9,y+4,'#304080');
+    // staff
+    fillRect(ctx,x+14,y+2,1,14,'#8B6040');
+    fillRect(ctx,x+13,y+1,3,3,'#80c0ff');
+    px(ctx,x+14,y+0,'#c0e0ff');
+  } else if(type==='merchant'){
+    fillRect(ctx,x+3,y+7,10,8,'#8B4010');
+    fillRect(ctx,x+3,y+10,10,5,'#6B3010');
+    fillRect(ctx,x+4,y+2,8,6,PAL.npc_skin);
+    // hat
+    fillRect(ctx,x+2,y+0,12,2,'#6B3010');
+    fillRect(ctx,x+4,y+-2,8,3,'#6B3010');
+    px(ctx,x+6,y+3,'#302010'); px(ctx,x+9,y+3,'#302010');
+    fillRect(ctx,x+5,y+5,6,1,'#c07040'); // smile
+    // pack
+    fillRect(ctx,x+12,y+5,4,8,'#a06030');
+    fillRect(ctx,x+13,y+6,2,6,'#c08040');
+  } else if(type==='innkeeper'){
+    fillRect(ctx,x+3,y+7,10,8,'#c03020');
+    fillRect(ctx,x+4,y+2,8,6,PAL.npc_skin);
+    fillRect(ctx,x+3,y+0,10,3,PAL.npc_hair);
+    px(ctx,x+5,y+4,'#302010'); px(ctx,x+9,y+4,'#302010');
+    fillRect(ctx,x+5,y+5,6,1,PAL.npc_skin);
+    // apron
+    fillRect(ctx,x+5,y+9,6,6,PAL.white);
+  }
+}
+
+function drawTile(ctx, x, y, type, frame) {
+  switch(type) {
+    case 'grass':
+      fillRect(ctx,x,y,TILE,TILE,PAL.grass);
+      if((x+y)%64<16){ px(ctx,x+3,y+3,PAL.grass3); px(ctx,x+10,y+11,PAL.grass3); }
+      if((x*3+y)%48<8){ px(ctx,x+7,y+7,PAL.grass2); }
+      break;
+    case 'grass2':
+      fillRect(ctx,x,y,TILE,TILE,PAL.grass2);
+      px(ctx,x+2,y+5,PAL.grass3); px(ctx,x+12,y+9,PAL.grass);
+      break;
+    case 'dirt':
+      fillRect(ctx,x,y,TILE,TILE,PAL.dirt);
+      if((x+y*2)%32<6){ fillRect(ctx,x+4,y+4,3,1,PAL.dirt2); }
+      break;
+    case 'path':
+      fillRect(ctx,x,y,TILE,TILE,PAL.sand);
+      fillRect(ctx,x+1,y+1,TILE-2,TILE-2,PAL.sand2);
+      if((x+y)%32<4){ px(ctx,x+5,y+8,PAL.sand); }
+      break;
+    case 'water': {
+      const wf=Math.floor(frame/20)%2;
+      fillRect(ctx,x,y,TILE,TILE,PAL.water);
+      fillRect(ctx,x,y+4+wf,TILE,2,PAL.water2);
+      fillRect(ctx,x,y+10+wf,TILE,2,PAL.water2);
+      if(wf){ fillRect(ctx,x+2,y+2,3,1,PAL.waterFm); fillRect(ctx,x+10,y+6,3,1,PAL.waterFm); }
+      break;
+    }
+    case 'wall':
+      fillRect(ctx,x,y,TILE,TILE,PAL.stone2);
+      fillRect(ctx,x,y,TILE,1,PAL.stoneHl);
+      fillRect(ctx,x,y,1,TILE,PAL.stoneHl);
+      fillRect(ctx,x,y+TILE-1,TILE,1,PAL.stone3);
+      fillRect(ctx,x+TILE-1,y,1,TILE,PAL.stone3);
+      if(y%32===0){ fillRect(ctx,x,y+7,TILE,2,PAL.stone3); }
+      else { fillRect(ctx,x+8,y,2,TILE,PAL.stone3); }
+      break;
+    case 'floor':
+      fillRect(ctx,x,y,TILE,TILE,PAL.dungeon1);
+      fillRect(ctx,x,y,TILE,1,PAL.dng1Hl);
+      fillRect(ctx,x,y,1,TILE,PAL.dng1Hl);
+      if((x+y)%32===0){ fillRect(ctx,x+6,y+6,4,4,PAL.dungeon2); }
+      break;
+    case 'lava': {
+      const lf=Math.floor(frame/15)%3;
+      fillRect(ctx,x,y,TILE,TILE,PAL.lava);
+      fillRect(ctx,x,y+lf*2,TILE,3,PAL.lava2);
+      fillRect(ctx,x+2,y+8+lf,4,2,PAL.fire1);
+      break;
+    }
+    case 'ice':
+      fillRect(ctx,x,y,TILE,TILE,PAL.ice);
+      fillRect(ctx,x+1,y+1,TILE-2,TILE-2,PAL.ice2);
+      ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+TILE,y+TILE); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+TILE,y); ctx.lineTo(x,y+TILE); ctx.stroke();
+      break;
+    case 'tree':
+      fillRect(ctx,x,y,TILE,TILE,PAL.grass);
+      // trunk
+      fillRect(ctx,x+6,y+10,4,6,PAL.treeTk);
+      // canopy layers
+      fillRect(ctx,x+3,y+8,10,5,PAL.tree);
+      fillRect(ctx,x+2,y+4,12,7,'#1a5a28');
+      fillRect(ctx,x+4,y+1,8,6,'#20682c');
+      fillRect(ctx,x+5,y+0,6,3,PAL.grass3);
+      // highlight
+      px(ctx,x+5,y+2,PAL.grass3); px(ctx,x+8,y+1,PAL.grass3);
+      break;
+    case 'housewall':
+      fillRect(ctx,x,y,TILE,TILE,'#c09060');
+      fillRect(ctx,x,y,TILE,1,'#e0b080');
+      fillRect(ctx,x,y,1,TILE,'#e0b080');
+      fillRect(ctx,x,y+TILE-1,TILE,1,'#806040');
+      break;
+    case 'houseroof':
+      fillRect(ctx,x,y,TILE,TILE,'#803010');
+      fillRect(ctx,x,y,TILE,2,'#a04020');
+      break;
+    case 'chest': {
+      fillRect(ctx,x+1,y+4,14,10,PAL.chestDk);
+      fillRect(ctx,x+1,y+4,14,4,PAL.chest);
+      fillRect(ctx,x+6,y+7,4,2,PAL.gold_);
+      fillRect(ctx,x+2,y+5,12,1,PAL.gold2);
+      break;
+    }
+    case 'chest_open':
+      fillRect(ctx,x+1,y+8,14,6,PAL.chestDk);
+      fillRect(ctx,x+1,y+2,14,4,PAL.chest);
+      fillRect(ctx,x+6,y+1,4,1,PAL.gold_);
+      break;
+    case 'door':
+      fillRect(ctx,x,y,TILE,TILE,PAL.dungeon2);
+      fillRect(ctx,x+2,y+1,12,TILE-1,'#5a3010');
+      fillRect(ctx,x+3,y+2,10,TILE-3,'#6a4020');
+      fillRect(ctx,x+7,y+8,2,3,PAL.gold_);
+      break;
+    case 'signpost':
+      fillRect(ctx,x+5,y+6,6,8,'#a07040');
+      fillRect(ctx,x+2,y+2,12,7,'#c09060');
+      fillRect(ctx,x+3,y+3,10,5,'#d0a070');
+      px(ctx,x+4,y+4,PAL.darkest); px(ctx,x+5,y+4,PAL.darkest);
+      px(ctx,x+4,y+6,PAL.darkest); px(ctx,x+5,y+6,PAL.darkest);
+      px(ctx,x+10,y+4,PAL.darkest);
+      break;
+    case 'stairsdown':
+      fillRect(ctx,x,y,TILE,TILE,PAL.stone2);
+      for(let i=0;i<4;i++){
+        fillRect(ctx,x+i*2,y+i*3,TILE-i*4,3,PAL.stoneLt);
+        fillRect(ctx,x+i*2,y+i*3+2,TILE-i*4,1,PAL.stone3);
+      }
+      break;
+    case 'crystal_floor':
+      fillRect(ctx,x,y,TILE,TILE,'#102840');
+      fillRect(ctx,x,y,TILE,1,PAL.crystal);
+      fillRect(ctx,x,y,1,TILE,PAL.crystal);
+      if((x+y)%32===0){ fillRect(ctx,x+4,y+4,8,8,'#1a3850'); }
+      break;
+    default:
+      fillRect(ctx,x,y,TILE,TILE,PAL.void_);
+  }
+}
+
+// ── MAPS ─────────────────────────────────────────────────
+// Each map: { tiles, events, npcs, enemies, exits, name }
+// Tiles: 2D array [row][col]  (32x27 tiles = 512x432 with HUD)
+
+const MAP_COLS = 32;
+const MAP_ROWS = 24; // rows below HUD
+
+function makeBlankMap(fill='grass') {
+  return Array.from({length:MAP_ROWS},()=>Array(MAP_COLS).fill(fill));
+}
+
+function borderWalls(tiles, wall='wall') {
+  for(let r=0;r<MAP_ROWS;r++)
+    for(let c=0;c<MAP_COLS;c++)
+      if(r===0||r===MAP_ROWS-1||c===0||c===MAP_COLS-1) tiles[r][c]=wall;
+}
+
+// ── WORLD MAP ─────────────────────────────────────────────
+function buildWorldMap() {
+  const t = makeBlankMap('grass');
+  // Rivers
+  for(let r=6;r<MAP_ROWS-2;r++) { t[r][8]='water'; t[r][9]='water'; }
+  for(let c=8;c<16;c++) { t[6][c]='water'; }
+  for(let c=8;c<MAP_COLS-2;c++) { t[20][c]='water'; }
+  // Paths
+  for(let r=3;r<MAP_ROWS-2;r++) { t[r][14]='path'; }
+  for(let c=1;c<14;c++) { t[12][ c]='path'; }
+  for(let c=14;c<MAP_COLS-2;c++) { t[8][c]='path'; }
+  for(let c=14;c<24;c++) { t[16][c]='path'; }
+  // Trees scattered
+  [[2,2],[2,4],[2,22],[2,26],[4,0],[4,25],[10,1],[10,3],[14,2],[14,4],
+   [16,1],[18,2],[20,2],[22,4],[3,18],[3,20],[5,19],[5,22]].forEach(([r,c])=>{ if(t[r][c]==='grass')t[r][c]='tree'; });
+  // Town area
+  for(let r=9;r<15;r++) for(let c=1;c<9;c++) if(t[r][c]==='grass') t[r][c]='grass2';
+  // Houses (represented as wall+roof tiles in event layer — NPCs handle the building look)
+  // Dungeon entrances are events, not tiles — shown as stairsdown
+  t[4][15]='stairsdown';   // Dungeon 1
+  t[9][22]='stairsdown';   // Dungeon 2
+  t[18][26]='stairsdown';  // Dungeon 3
+  // Sand beach around bottom water
+  for(let c=9;c<MAP_COLS-2;c++) if(t[19][c]==='grass'||t[19][c]==='path') t[19][c]='sand';
+  return t;
+}
+
+// ── DUNGEON 1: Forest Temple ───────────────────────────────
+function buildDungeon1() {
+  const t = makeBlankMap('floor');
+  borderWalls(t,'wall');
+  // Rooms
+  // Entrance hall
+  for(let r=20;r<MAP_ROWS-1;r++) for(let c=12;c<20;c++) t[r][c]='floor';
+  // Main room
+  for(let r=12;r<21;r++) for(let c=8;c<24;c++) t[r][c]='floor';
+  // Left chamber
+  for(let r=8;r<18;r++) for(let c=2;c<10;c++) t[r][c]='floor';
+  // Right chamber (chest room)
+  for(let r=8;r<18;r++) for(let c=22;c<30;c++) t[r][c]='floor';
+  // Top corridor
+  for(let r=4;r<13;r++) for(let c=12;c<20;c++) t[r][c]='floor';
+  // Pillars
+  [[14,10],[14,14],[14,18],[14,22],[7,13],[7,19]].forEach(([r,c])=>{ t[r][c]='wall'; t[r][c+1]='wall'; t[r+1][c]='wall'; });
+  // Walls between rooms
+  for(let r=8;r<13;r++) { t[r][9]='wall'; t[r][23]='wall'; }
+  // Doors (as floor for now, events handle them)
+  t[19][15]='floor'; t[19][16]='floor'; // entry
+  t[11][14]='floor'; t[11][15]='floor'; // top
+  t[12][8]='floor'; t[12][9]='floor';   // left
+  t[12][22]='floor'; t[12][23]='floor'; // right chest room
+  // Boss room at top
+  for(let r=1;r<5;r++) for(let c=10;c<22;c++) t[r][c]='floor';
+  return t;
+}
+
+// ── DUNGEON 2: Lava Cavern ─────────────────────────────────
+function buildDungeon2() {
+  const t = makeBlankMap('wall');
+  // Rooms with lava pits
+  const rooms=[
+    [19,12,MAP_ROWS-2,20],[12,8,21,24],[8,16,14,28],
+    [4,10,13,18],[1,12,5,20]
+  ];
+  rooms.forEach(([r1,c1,r2,c2])=>{
+    for(let r=r1;r<r2;r++) for(let c=c1;c<c2;c++) t[r][c]='floor';
+  });
+  // Lava pits
+  [[14,10],[14,11],[15,10],[15,11],[13,19],[14,19],[6,17],[6,18]].forEach(([r,c])=>t[r][c]='lava');
+  return t;
+}
+
+// ── DUNGEON 3: Crystal Palace ──────────────────────────────
+function buildDungeon3() {
+  const t = makeBlankMap('wall');
+  const rooms=[
+    [19,11,MAP_ROWS-2,21],[13,7,21,25],[8,4,15,14],
+    [8,18,15,28],[3,10,9,22],[1,13,4,19]
+  ];
+  rooms.forEach(([r1,c1,r2,c2])=>{
+    for(let r=r1;r<r2;r++) for(let c=c1;c<c2;c++) t[r][c]='crystal_floor';
+  });
+  // Ice sections
+  [[14,8],[14,9],[14,10],[15,8],[15,9],[10,19],[10,20],[11,20]].forEach(([r,c])=>t[r][c]='ice');
+  return t;
+}
+
+function buildTown() {
+  const t = makeBlankMap('dirt');
+  borderWalls(t,'housewall');
+  for(let r=1;r<MAP_ROWS-1;r++) for(let c=1;c<MAP_COLS-1;c++) t[r][c]='dirt';
+  // Paths
+  for(let c=1;c<MAP_COLS-1;c++) t[12][c]='path';
+  for(let r=1;r<MAP_ROWS-1;r++) t[r][16]='path';
+  // Buildings
+  for(let r=2;r<7;r++) for(let c=2;c<9;c++) t[r][c]='housewall';
+  for(let r=2;r<4;r++) for(let c=2;c<9;c++) t[r][c]='houseroof';
+  for(let r=2;r<7;r++) for(let c=11;c<18;c++) t[r][c]='housewall';
+  for(let r=2;r<4;r++) for(let c=11;c<18;c++) t[r][c]='houseroof';
+  for(let r=14;r<20;r++) for(let c=4;c<12;c++) t[r][c]='housewall';
+  for(let r=14;r<16;r++) for(let c=4;c<12;c++) t[r][c]='houseroof';
+  for(let r=14;r<20;r++) for(let c=20;c<28;c++) t[r][c]='housewall';
+  for(let r=14;r<16;r++) for(let c=20;c<28;c++) t[r][c]='houseroof';
+  // Well
+  fillTileCircle(t,5,22,2,'stone');
+  t[5][22]='water';
+  // Signpost
+  t[10][16]='signpost';
+  t[8][2]='chest';
+  return t;
+}
+
+function fillTileCircle(t,r,c,rad,tile){
+  for(let dr=-rad;dr<=rad;dr++) for(let dc=-rad;dc<=rad;dc++)
+    if(dr*dr+dc*dc<=rad*rad && r+dr>=0&&r+dr<MAP_ROWS&&c+dc>=0&&c+dc<MAP_COLS)
+      t[r+dr][c+dc]=tile;
+}
+
+// ── SOLID tile check ──────────────────────────────────────
+const SOLID_TILES = new Set(['wall','tree','water','housewall','houseroof','lava','ice']);
+const WARP_TILES = new Set(['stairsdown','door']);
+
+function isSolid(tileType) { return SOLID_TILES.has(tileType); }
+
+// ── GAME STATE ────────────────────────────────────────────
+const STATE = {
+  scene: 'world',    // 'world','town','dungeon1','dungeon2','dungeon3'
+  prevScene: null,
+  hero: { x:14*TILE, y:11*TILE, dir:1, hp:6, maxHp:6, frame:0, speed:2,
+          swordSwing:0, fireCooldown:0, invincible:0, gold:0 },
+  shards: [false,false,false,false,false,false,false,false],
+  skills: { fireball: false, sword: true },
+  dungeons: { dungeon1:false, dungeon2:false, dungeon3:false },
+  enemies: [],
+  fireballs: [],
+  particles: [],
+  messages: [],
+  currentMsg: null,
+  msgPage: 0,
+  chests: {},       // key: 'scene_r_c' => opened bool
+  frame: 0,
+  keys: {},
+  prevKeys: {},
+  gamePhase: 'playing', // 'playing','message','dungeon_clear','victory'
+  dungeonClearTimer: 0,
+  entryPos: null,    // where to return after dungeon
+};
+
+// ── MAPS CACHE ─────────────────────────────────────────────
+const MAPS = {
+  world: buildWorldMap(),
+  town: buildTown(),
+  dungeon1: buildDungeon1(),
+  dungeon2: buildDungeon2(),
+  dungeon3: buildDungeon3(),
+};
+
+// ── NPCS ──────────────────────────────────────────────────
+const NPCS_BY_SCENE = {
+  world: [],
+  town: [
+    { x:5*TILE, y:3*TILE, type:'elder', name:'Elder Moreth',
+      dialog:['Welcome, young hero. The Goddess Aelith has fallen into endless slumber.',
+              'Her soul shattered into 8 Shards, scattered across three cursed dungeons.',
+              'You must retrieve them all. Begin at the Forest Temple to the north.'] },
+    { x:13*TILE, y:3*TILE, type:'merchant', name:'Bram the Trader',
+      dialog:['Aye, strange days. My wares are simple but perhaps useful.',
+              'I\'ve heard the Forest Temple holds an ancient fire magic.',
+              'Be careful — the Golem inside is no mere obstacle.'] },
+    { x:8*TILE, y:17*TILE, type:'innkeeper', name:'Mira',
+      dialog:['Rest here weary traveler. The world grows darker each day.',
+              'Come back when your heart is full — we\'ll make sure you\'re ready.'] },
+  ],
+  dungeon1: [
+    { x:15*TILE, y:22*TILE, type:'elder', name:'Ancient Spirit',
+      dialog:['This temple was sealed long ago to protect the Fire Shard.',
+              'Beware the Stone Golem in the inner sanctum.',
+              'The chest in the eastern chamber holds the power of flames. Use it wisely.'] },
+  ],
+  dungeon2: [],
+  dungeon3: [],
+};
+
+// ── ENEMY SPAWNS ──────────────────────────────────────────
+function spawnEnemies(scene) {
+  STATE.enemies = [];
+  const spawns = {
+    world: [
+      {x:20*TILE,y:5*TILE,type:'slime',hp:3,maxHp:3,speed:0.5,atk:1},
+      {x:25*TILE,y:8*TILE,type:'slime',hp:3,maxHp:3,speed:0.5,atk:1},
+      {x:28*TILE,y:14*TILE,type:'bat',hp:2,maxHp:2,speed:1.2,atk:1},
+      {x:22*TILE,y:18*TILE,type:'slime',hp:3,maxHp:3,speed:0.5,atk:1},
+    ],
+    dungeon1: [
+      {x:5*TILE,y:12*TILE,type:'skeleton',hp:5,maxHp:5,speed:0.8,atk:1},
+      {x:6*TILE,y:15*TILE,type:'skeleton',hp:5,maxHp:5,speed:0.8,atk:1},
+      {x:26*TILE,y:12*TILE,type:'bat',hp:2,maxHp:2,speed:1.3,atk:1},
+      {x:25*TILE,y:14*TILE,type:'bat',hp:2,maxHp:2,speed:1.3,atk:1},
+      {x:16*TILE,y:2*TILE,type:'golem',hp:20,maxHp:20,speed:0.4,atk:2,boss:true},
+    ],
+    dungeon2: [
+      {x:15*TILE,y:20*TILE,type:'lavaslug',hp:6,maxHp:6,speed:0.6,atk:1},
+      {x:12*TILE,y:14*TILE,type:'lavaslug',hp:6,maxHp:6,speed:0.6,atk:1},
+      {x:20*TILE,y:10*TILE,type:'bat',hp:2,maxHp:2,speed:1.5,atk:1},
+      {x:14*TILE,y:5*TILE,type:'golem',hp:28,maxHp:28,speed:0.3,atk:2,boss:true},
+    ],
+    dungeon3: [
+      {x:15*TILE,y:20*TILE,type:'icewolf',hp:8,maxHp:8,speed:1.0,atk:1},
+      {x:8*TILE,y:10*TILE,type:'icewolf',hp:8,maxHp:8,speed:1.0,atk:1},
+      {x:22*TILE,y:10*TILE,type:'skeleton',hp:5,maxHp:5,speed:0.8,atk:1},
+      {x:16*TILE,y:2*TILE,type:'golem',hp:36,maxHp:36,speed:0.3,atk:3,boss:true},
+    ],
+  };
+  (spawns[scene]||[]).forEach(s=>STATE.enemies.push({...s,frame:0,hitTimer:0,dead:false,aggro:false}));
+}
+
+// ── CHEST EVENTS ──────────────────────────────────────────
+const CHEST_EVENTS = {
+  'dungeon1_8_27': { item:'fireball', dialog:['You found the Fire Shard Seal!','The ancient power of flames awakens within you.','Press X to unleash the Fireball!'] },
+  'world_3_26': { item:'gold50', dialog:['Found 50 gold coins!'] },
+  'town_10_2': { item:'heart', dialog:['A Heart Container! Max HP increased!'] },
+};
+
+// ── WARP EVENTS ───────────────────────────────────────────
+const WARP_EVENTS = {
+  world: [
+    { r:4, c:15, dest:'dungeon1', tx:15*TILE, ty:22*TILE },
+    { r:9, c:22, dest:'dungeon2', tx:15*TILE, ty:21*TILE,
+      cond:()=>STATE.dungeons.dungeon1, condMsg:'The door won\'t budge. Perhaps another dungeon must be cleared first...' },
+    { r:18,c:26, dest:'dungeon3', tx:15*TILE, ty:21*TILE,
+      cond:()=>STATE.dungeons.dungeon2, condMsg:'An icy barrier blocks the entrance. Clear the Lava Cavern first.' },
+    { r:12,c:1, dest:'town', tx:16*TILE, ty:12*TILE },
+  ],
+  town: [
+    { r:12, c:30, dest:'world', tx:1*TILE, ty:12*TILE },
+    { r:12, c:1,  dest:'world', tx:1*TILE, ty:12*TILE },
+    { r:23, c:16, dest:'world', tx:14*TILE, ty:11*TILE },
+  ],
+  dungeon1: [
+    { r:23, c:15, dest:'world', tx:14*TILE, ty:5*TILE },
+    { r:23, c:16, dest:'world', tx:14*TILE, ty:5*TILE },
+  ],
+  dungeon2: [
+    { r:23, c:15, dest:'world', tx:22*TILE, ty:10*TILE },
+  ],
+  dungeon3: [
+    { r:23, c:15, dest:'world', tx:26*TILE, ty:19*TILE },
+  ],
+};
+
+// ── PARTICLE SYSTEM ───────────────────────────────────────
+function spawnParticle(x,y,color,vx,vy,life=30) {
+  STATE.particles.push({x,y,vx,vy,life,maxLife:life,color});
+}
+
+function spawnHitParticles(x,y) {
+  for(let i=0;i<8;i++) {
+    const ang=Math.random()*Math.PI*2;
+    const spd=1+Math.random()*2;
+    spawnParticle(x,y,Math.random()>0.5?PAL.fire1:PAL.fire2,
+      Math.cos(ang)*spd,Math.sin(ang)*spd,20);
+  }
+}
+
+function spawnDeathParticles(x,y) {
+  for(let i=0;i<16;i++) {
+    const ang=Math.random()*Math.PI*2;
+    const spd=0.5+Math.random()*3;
+    spawnParticle(x+8,y+8,
+      [PAL.purple,PAL.purpleLt,PAL.white,PAL.gold_][Math.floor(Math.random()*4)],
+      Math.cos(ang)*spd,Math.sin(ang)*spd,40+Math.random()*20);
+  }
+}
+
+// ── INPUT ─────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  STATE.keys[e.code]=true;
+  // prevent page scroll
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup',e=>{ STATE.keys[e.code]=false; });
+
+function keyPressed(code) { return STATE.keys[code] && !STATE.prevKeys[code]; }
+
+// ── DIALOG ────────────────────────────────────────────────
+function showMessage(name, pages, portrait) {
+  STATE.currentMsg = { name, pages, portrait, page:0 };
+  STATE.gamePhase = 'message';
+  const box = document.getElementById('message-box');
+  box.style.display='block';
+  document.getElementById('msg-name').textContent = name;
+  document.getElementById('msg-text').textContent = pages[0];
+  renderPortrait(portrait || name);
+}
+
+function advanceMessage() {
+  if(!STATE.currentMsg) return;
+  STATE.currentMsg.page++;
+  if(STATE.currentMsg.page >= STATE.currentMsg.pages.length) {
+    document.getElementById('message-box').style.display='none';
+    STATE.currentMsg = null;
+    STATE.gamePhase = 'playing';
+  } else {
+    document.getElementById('msg-text').textContent =
+      STATE.currentMsg.pages[STATE.currentMsg.page];
+  }
+}
+
+function renderPortrait(type) {
+  const pc = document.getElementById('msg-portrait');
+  const pctx = pc.getContext('2d');
+  pctx.clearRect(0,0,40,40);
+  pctx.fillStyle='#201828';
+  pctx.fillRect(0,0,40,40);
+  // draw mini version of npc
+  if(type==='Elder Moreth'||type==='Ancient Spirit') drawNPC(pctx,4,4,'elder',0);
+  else if(type==='Bram the Trader') drawNPC(pctx,4,4,'merchant',0);
+  else if(type==='Mira') drawNPC(pctx,4,4,'innkeeper',0);
+  else { drawHero(pctx,4,4,1,0,false); }
+}
+
+// ── SCENE MANAGEMENT ─────────────────────────────────────
+function changeScene(dest, tx, ty) {
+  STATE.prevScene = STATE.scene;
+  STATE.scene = dest;
+  STATE.hero.x = tx;
+  STATE.hero.y = ty;
+  STATE.fireballs = [];
+  STATE.particles = [];
+  spawnEnemies(dest);
+  document.getElementById('area-name').textContent = {
+    world:'WORLD MAP', town:'AELITH TOWN',
+    dungeon1:'FOREST TEMPLE', dungeon2:'LAVA CAVERN', dungeon3:'CRYSTAL PALACE'
+  }[dest] || dest.toUpperCase();
+}
+
+// ── COLLISION ─────────────────────────────────────────────
+function heroRect() {
+  const h=STATE.hero;
+  return {x:h.x+3, y:h.y+10, w:10, h:8};
+}
+
+function canMove(dx,dy) {
+  const h=heroRect();
+  const nx=h.x+dx, ny=h.y+dy;
+  const tiles=MAPS[STATE.scene];
+  if(!tiles) return true;
+  const corners=[
+    [nx,ny],[nx+h.w-1,ny],[nx,ny+h.h-1],[nx+h.w-1,ny+h.h-1]
+  ];
+  for(const [cx,cy] of corners){
+    const c=Math.floor(cx/TILE), r=Math.floor(cy/TILE);
+    if(r<0||r>=MAP_ROWS||c<0||c>=MAP_COLS) return false;
+    const tile=tiles[r][c];
+    if(isSolid(tile)) return false;
+  }
+  return true;
+}
+
+// ── SWORD HIT ─────────────────────────────────────────────
+function swordHitbox() {
+  const h=STATE.hero;
+  const reach=14;
+  if(h.dir===1) return {x:h.x+3,y:h.y+16,w:10,h:reach};
+  if(h.dir===0) return {x:h.x+3,y:h.y-reach+10,w:10,h:reach};
+  if(h.dir===2) return {x:h.x+TILE+2,y:h.y+6,w:reach,h:8};
+  if(h.dir===3) return {x:h.x-reach+3,y:h.y+6,w:reach,h:8};
+  return {x:0,y:0,w:0,h:0};
+}
+
+// ── DUNGEON BOSS DEATH → SHARD ─────────────────────────────
+function handleBossDeath(scene) {
+  const shardIdx = {dungeon1:0, dungeon2:2, dungeon3:4}[scene];
+  if(shardIdx === undefined) return;
+  if(!STATE.shards[shardIdx]) {
+    STATE.shards[shardIdx] = true;
+    STATE.shards[shardIdx+1] = true; // Each dungeon gives 2 shards
+    STATE.dungeons[scene] = true;
+    STATE.gamePhase = 'dungeon_clear';
+    STATE.dungeonClearTimer = 0;
+    document.getElementById('dungeon-clear').style.display='flex';
+    document.getElementById('shard-name-text').textContent =
+      {dungeon1:'Fire Shards I & II Obtained!',
+       dungeon2:'Lava Shards III & IV Obtained!',
+       dungeon3:'Crystal Shards V & VI Obtained!'}[scene];
+    updateHUD();
+  }
+}
+
+// ── HUD UPDATE ────────────────────────────────────────────
+function updateHUD() {
+  // Hearts
+  const hd = document.getElementById('hearts-display');
+  hd.innerHTML='';
+  for(let i=0;i<STATE.hero.maxHp/2;i++){
+    const span=document.createElement('span');
+    const filled = i*2 < STATE.hero.hp;
+    const half = i*2+1 === STATE.hero.hp;
+    span.textContent = filled ? '❤️' : half ? '💛' : '🖤';
+    span.style.fontSize='12px';
+    hd.appendChild(span);
+  }
+  // Shards
+  const sd = document.getElementById('shards-display');
+  const icons = sd.querySelectorAll('.shard-icon');
+  STATE.shards.forEach((s,i)=>{
+    if(icons[i]) icons[i].classList.toggle('collected',s);
+  });
+  // Gold
+  document.getElementById('gold-display').textContent = STATE.hero.gold;
+}
+
+// ── MINIMAP ───────────────────────────────────────────────
+function renderMinimap() {
+  const mc = document.getElementById('minimap');
+  const mctx = mc.getContext('2d');
+  const tiles=MAPS[STATE.scene];
+  if(!tiles){mctx.clearRect(0,0,80,80);return;}
+  const sc=80/MAP_COLS;
+  const sr=80/MAP_ROWS;
+  mctx.clearRect(0,0,80,80);
+  for(let r=0;r<MAP_ROWS;r++) for(let c=0;c<MAP_COLS;c++){
+    const tile=tiles[r][c];
+    mctx.fillStyle={
+      grass:'#286830',grass2:'#307838',dirt:'#8B6040',path:'#c8a060',
+      water:'#1848a0',wall:'#606880',floor:'#483028',lava:'#c03000',
+      ice:'#a0d0ff',crystal_floor:'#102840',tree:'#184820',
+      housewall:'#c09060',houseroof:'#803010',sand:'#c8a060',
+      stairsdown:'#f0d060',
+    }[tile]||'#0a0612';
+    mctx.fillRect(c*sc,r*sr,sc,sr);
+  }
+  // Hero dot
+  const hc=STATE.hero.x/TILE*sc;
+  const hr=STATE.hero.y/TILE*sr;
+  mctx.fillStyle='#ffffff';
+  mctx.fillRect(hc,hr,sc+1,sr+1);
+}
+
+// ── MAIN GAME LOOP ────────────────────────────────────────
+const canvas = document.getElementById('game-canvas');
+canvas.width = CANVAS_W;
+canvas.height = CANVAS_H;
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// Setup shard icons
+const sd = document.getElementById('shards-display');
+for(let i=0;i<8;i++){
+  const d=document.createElement('div');
+  d.className='shard-icon';
+  sd.appendChild(d);
+}
+
+let lastTime=0;
+let frameCount=0;
+
+function gameLoop(ts) {
+  const dt=Math.min(ts-lastTime,50);
+  lastTime=ts;
+  frameCount++;
+  STATE.frame=frameCount;
+
+  if(STATE.gamePhase==='playing') updateGame(dt);
+  else if(STATE.gamePhase==='message') {
+    if(keyPressed('Enter')||keyPressed('Space')) advanceMessage();
+  } else if(STATE.gamePhase==='dungeon_clear') {
+    STATE.dungeonClearTimer++;
+    if(STATE.dungeonClearTimer>60&&(keyPressed('Enter')||keyPressed('Space'))) {
+      document.getElementById('dungeon-clear').style.display='none';
+      // Check victory
+      if(STATE.shards.filter(Boolean).length>=6) {
+        showVictory();
+      } else {
+        STATE.gamePhase='playing';
+      }
+    }
+  }
+
+  renderGame();
+  STATE.prevKeys={...STATE.keys};
+  requestAnimationFrame(gameLoop);
+}
+
+function showVictory() {
+  STATE.gamePhase='message';
+  showMessage('Goddess Aelith',[
+    'The shards... they resonate with a divine light!',
+    'I feel my soul reforming. The darkness recedes...',
+    'Hero... you have done it. Aelith stirs once more.',
+    'The world slowly comes back to life. Trees grow.',
+    'Rivers flow with clean water. The skies clear.',
+    'Thank you. The world is saved. Rest now, brave soul.',
+  ], 'elder');
+}
+
+function updateGame(dt) {
+  const h=STATE.hero;
+  h.frame++;
+
+  // Movement
+  let moved=false;
+  let dx=0,dy=0;
+  if(STATE.keys['ArrowUp']||STATE.keys['KeyW']){dy=-h.speed;h.dir=0;}
+  if(STATE.keys['ArrowDown']||STATE.keys['KeyS']){dy=h.speed;h.dir=1;}
+  if(STATE.keys['ArrowLeft']||STATE.keys['KeyA']){dx=-h.speed;h.dir=3;}
+  if(STATE.keys['ArrowRight']||STATE.keys['KeyD']){dx=h.speed;h.dir=2;}
+
+  if(dx!==0&&dy!==0){dx*=0.707;dy*=0.707;}
+
+  if(dx!==0&&canMove(dx,0)){h.x+=dx;moved=true;}
+  if(dy!==0&&canMove(0,dy)){h.y+=dy;moved=true;}
+
+  // Clamp to map
+  h.x=clamp(h.x,0,(MAP_COLS-1)*TILE);
+  h.y=clamp(h.y,0,(MAP_ROWS-1)*TILE);
+
+  // Invincibility frames
+  if(h.invincible>0) h.invincible--;
+
+  // Sword swing
+  if(h.swordSwing>0) h.swordSwing--;
+  if((keyPressed('KeyZ')||keyPressed('Space'))&&h.swordSwing===0&&STATE.skills.sword) {
+    h.swordSwing=12;
+    const hb=swordHitbox();
+    STATE.enemies.forEach(e=>{
+      if(!e.dead&&rectOverlap(hb.x,hb.y,hb.w,hb.h,e.x,e.y,16,16)){
+        e.hp-=2;
+        e.hitTimer=10;
+        spawnHitParticles(e.x+8,e.y+8);
+        if(e.hp<=0){
+          e.dead=true;
+          spawnDeathParticles(e.x,e.y);
+          h.gold+=e.boss?50:5;
+          if(e.boss) handleBossDeath(STATE.scene);
+        }
+      }
+    });
+  }
+
+  // Fireball
+  if(h.fireCooldown>0) h.fireCooldown--;
+  if(keyPressed('KeyX')&&h.fireCooldown===0&&STATE.skills.fireball) {
+    h.fireCooldown=30;
+    const dirs=[[0,-3],[0,3],[-3,0],[3,0]];
+    const [fdx,fdy]=dirs[h.dir];
+    STATE.fireballs.push({x:h.x+8,y:h.y+8,vx:fdx,vy:fdy,life:60});
+  }
+
+  // Update fireballs
+  STATE.fireballs=STATE.fireballs.filter(f=>{
+    f.x+=f.vx; f.y+=f.vy; f.life--;
+    const tc=Math.floor(f.x/TILE),tr=Math.floor(f.y/TILE);
+    const tiles=MAPS[STATE.scene];
+    if(tr>=0&&tr<MAP_ROWS&&tc>=0&&tc<MAP_COLS&&tiles&&isSolid(tiles[tr][tc])){
+      spawnHitParticles(f.x,f.y); return false;
+    }
+    // Hit enemies
+    let hit=false;
+    STATE.enemies.forEach(e=>{
+      if(!e.dead&&!hit&&rectOverlap(f.x-4,f.y-4,8,8,e.x,e.y,16,16)){
+        e.hp-=1; e.hitTimer=8;
+        spawnHitParticles(e.x+8,e.y+8);
+        if(e.hp<=0){ e.dead=true; spawnDeathParticles(e.x,e.y); h.gold+=e.boss?50:5; if(e.boss)handleBossDeath(STATE.scene); }
+        hit=true;
+      }
+    });
+    if(hit){ spawnHitParticles(f.x,f.y); return false; }
+    return f.life>0;
+  });
+
+  // Update enemies
+  STATE.enemies=STATE.enemies.filter(e=>!e.dead);
+  STATE.enemies.forEach(e=>{
+    e.frame++;
+    if(e.hitTimer>0) e.hitTimer--;
+    // AI: chase hero when close
+    const dist=Math.hypot(h.x-e.x,h.y-e.y);
+    if(dist<200||e.boss) e.aggro=true;
+    if(e.aggro&&dist>400) e.aggro=false;
+    if(e.aggro&&dist>20) {
+      const ang=Math.atan2(h.y-e.y,h.x-e.x);
+      const spd=e.boss?(e.hp<e.maxHp*0.5?e.speed*1.5:e.speed):e.speed;
+      const edx=Math.cos(ang)*spd, edy=Math.sin(ang)*spd;
+      e.x+=edx; e.y+=edy;
+    }
+    // Boss wander
+    if(e.boss&&!e.aggro){
+      if(!e._wt){e._wt=0;e._wd=Math.random()*Math.PI*2;}
+      e._wt++;
+      if(e._wt>60){e._wt=0;e._wd=Math.random()*Math.PI*2;}
+      e.x+=Math.cos(e._wd)*e.speed*0.3;
+      e.y+=Math.sin(e._wd)*e.speed*0.3;
+    }
+    // Damage hero
+    if(h.invincible===0&&rectOverlap(h.x+3,h.y+10,10,8,e.x+2,e.y+4,12,8)){
+      h.hp=Math.max(0,h.hp-e.atk);
+      h.invincible=60;
+      spawnHitParticles(h.x+8,h.y+8);
+      updateHUD();
+      if(h.hp<=0) respawnHero();
+    }
+  });
+
+  // Update particles
+  STATE.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=0.9;p.vy*=0.9;p.life--;});
+  STATE.particles=STATE.particles.filter(p=>p.life>0);
+
+  // Check warp zones
+  const hr=Math.floor((h.y+12)/TILE), hc=Math.floor((h.x+8)/TILE);
+  const warps=WARP_EVENTS[STATE.scene]||[];
+  for(const w of warps){
+    if(Math.abs(hr-w.r)<=0&&Math.abs(hc-w.c)<=0){
+      if(w.cond&&!w.cond()){
+        if(!STATE._warpMsg){
+          STATE._warpMsg=true;
+          showMessage('???',[w.condMsg||'The way is blocked.']);
+          setTimeout(()=>STATE._warpMsg=false,2000);
+        }
+        break;
+      }
+      changeScene(w.dest,w.tx,w.ty);
+      break;
+    }
+  }
+
+  // Check NPC interaction
+  if(keyPressed('Enter')||keyPressed('KeyE')){
+    const npcs=NPCS_BY_SCENE[STATE.scene]||[];
+    for(const npc of npcs){
+      if(Math.abs(h.x-npc.x)<24&&Math.abs(h.y-npc.y)<24){
+        showMessage(npc.name, npc.dialog, npc.type||npc.name);
+        break;
+      }
+    }
+    // Check chests
+    const tiles=MAPS[STATE.scene];
+    const chests=[[hr,hc],[hr,hc+1],[hr,hc-1],[hr-1,hc]];
+    for(const [cr,cc] of chests){
+      if(cr>=0&&cr<MAP_ROWS&&cc>=0&&cc<MAP_COLS){
+        if(tiles[cr][cc]==='chest'){
+          const key=`${STATE.scene}_${cr}_${cc}`;
+          if(!STATE.chests[key]){
+            STATE.chests[key]=true;
+            tiles[cr][cc]='chest_open';
+            const ev=CHEST_EVENTS[key];
+            if(ev){
+              if(ev.item==='fireball'){ STATE.skills.fireball=true; document.getElementById('slot-fire').classList.add('active'); }
+              if(ev.item==='gold50'){ h.gold+=50; updateHUD(); }
+              if(ev.item==='heart'){ h.maxHp+=2; h.hp=h.maxHp; updateHUD(); }
+              showMessage('!',ev.dialog);
+            } else {
+              const g=rand(5,20); h.gold+=g; updateHUD();
+              showMessage('Treasure!',['Found '+g+' gold coins!']);
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // Periodic HUD sync
+  if(frameCount%30===0) updateHUD();
+  if(frameCount%10===0) renderMinimap();
+}
+
+function respawnHero() {
+  const h=STATE.hero;
+  h.hp=Math.ceil(h.maxHp*0.5);
+  h.x=15*TILE; h.y=12*TILE;
+  STATE.scene='world';
+  spawnEnemies('world');
+  document.getElementById('area-name').textContent='WORLD MAP';
+  updateHUD();
+  showMessage('...',['You were defeated... but the Goddess\' light restored you.',
+    'Return to the dungeons when ready. The shards await.']);
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function renderGame() {
+  ctx.fillStyle=PAL.void_;
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+  const tiles=MAPS[STATE.scene];
+  if(!tiles) return;
+
+  // Draw tiles
+  for(let r=0;r<MAP_ROWS;r++){
+    for(let c=0;c<MAP_COLS;c++){
+      drawTile(ctx, c*TILE, r*TILE+HUD_H, tiles[r][c], STATE.frame);
+    }
+  }
+
+  // Draw chest open/closed on top (they're in tile layer so drawn above)
+  // (already drawn via drawTile)
+
+  // Depth-sort sprites (sort by Y)
+  const sprites=[];
+
+  // NPCs
+  (NPCS_BY_SCENE[STATE.scene]||[]).forEach(npc=>{
+    sprites.push({y:npc.y, draw:()=>drawNPC(ctx,npc.x,npc.y+HUD_H,npc.type,STATE.frame)});
+  });
+
+  // Enemies
+  STATE.enemies.forEach(e=>{
+    sprites.push({y:e.y, draw:()=>{
+      if(e.hitTimer>0&&Math.floor(e.hitTimer/2)%2===0){
+        ctx.globalAlpha=0.4;
+      }
+      drawEnemy(ctx,e.x,e.y+HUD_H,e.type,e.frame,e.hp,e.maxHp);
+      ctx.globalAlpha=1;
+    }});
+  });
+
+  // Hero
+  sprites.push({y:STATE.hero.y, draw:()=>{
+    if(STATE.hero.swordSwing>0) drawSword(ctx,STATE.hero.x,STATE.hero.y+HUD_H,STATE.hero.dir,STATE.hero.swordSwing);
+    drawHero(ctx,STATE.hero.x,STATE.hero.y+HUD_H,STATE.hero.dir,Math.floor(STATE.hero.frame/8)%4,STATE.hero.invincible>0);
+  }});
+
+  sprites.sort((a,b)=>a.y-b.y);
+  sprites.forEach(s=>s.draw());
+
+  // Fireballs
+  STATE.fireballs.forEach(f=>{
+    drawFireball(ctx,f.x,f.y+HUD_H,STATE.frame);
+  });
+
+  // Particles
+  STATE.particles.forEach(p=>{
+    const alpha=p.life/p.maxLife;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x-1,p.y+HUD_H-1,2,2);
+    ctx.globalAlpha=1;
+  });
+
+  // Sword swing arc overlay
+  if(STATE.hero.swordSwing>0){
+    // light sparkle
+    for(let i=0;i<3;i++){
+      const sp=STATE.hero.swordSwing;
+      ctx.fillStyle=`rgba(200,220,255,${0.3*(sp/12)})`;
+      ctx.fillRect(STATE.hero.x+2+i,STATE.hero.y+HUD_H+2+i,12-i*2,12-i*2);
+    }
+  }
+
+  // Dungeon entrance glow
+  if(STATE.scene==='world'){
+    [[4,15,PAL.fire1],[9,22,PAL.lava],[18,26,PAL.crystal]].forEach(([r,c,col])=>{
+      ctx.fillStyle=col.replace('#','rgba(').replace(/([0-9a-f]{2})/gi,(m,p)=>parseInt(p,16)+',')+'0.15)';
+      ctx.fillStyle=col;
+      ctx.globalAlpha=0.2+Math.sin(STATE.frame*0.05)*0.1;
+      ctx.fillRect(c*TILE-4,r*TILE+HUD_H-4,TILE+8,TILE+8);
+      ctx.globalAlpha=1;
+    });
+  }
+
+  // HUD scanlines subtle
+  ctx.fillStyle='rgba(0,0,0,0.03)';
+  for(let y=0;y<CANVAS_H;y+=2) ctx.fillRect(0,y,CANVAS_W,1);
+}
+
+// ── TITLE SCREEN ──────────────────────────────────────────
+function setupTitleScreen() {
+  // Stars
+  const container=document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()<0.1?2:1;
+    s.style.cssText=`width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${1+Math.random()*3}s;animation-delay:${Math.random()*3}s`;
+    container.appendChild(s);
+  }
+
+  // Title canvas — pixel goddess silhouette
+  const tc=document.getElementById('title-canvas');
+  const tctx=tc.getContext('2d');
+  tctx.imageSmoothingEnabled=false;
+  // Draw goddess pixel art
+  const gx=70,gy=5;
+  // Glow
+  tctx.fillStyle='rgba(128,192,255,0.15)';
+  tctx.fillRect(gx-10,gy,40,70);
+  // Robe
+  fillRect(tctx,gx+5,gy+30,10,40,'#4040a0');
+  fillRect(tctx,gx+2,gy+35,16,35,'#3030c0');
+  // Body
+  fillRect(tctx,gx+6,gy+16,8,18,'#5050b0');
+  // Arms spread
+  fillRect(tctx,gx-4,gy+20,8,4,'#7070c0');
+  fillRect(tctx,gx+16,gy+20,8,4,'#7070c0');
+  // Hands glow
+  fillRect(tctx,gx-6,gy+18,4,4,'#80c0ff');
+  fillRect(tctx,gx+22,gy+18,4,4,'#80c0ff');
+  // Head
+  fillRect(tctx,gx+6,gy+4,8,10,'#f0c090');
+  // Hair
+  fillRect(tctx,gx+5,gy+2,10,5,'#d0d0ff');
+  fillRect(tctx,gx+4,gy+6,2,8,'#d0d0ff');
+  fillRect(tctx,gx+14,gy+6,2,8,'#d0d0ff');
+  // Crown
+  fillRect(tctx,gx+4,gy+0,12,3,'#f0d060');
+  for(let i=0;i<3;i++) fillRect(tctx,gx+5+i*4,gy-2,2,3,'#f0d060');
+  // Eyes
+  px(tctx,gx+8,gy+8,'#6080ff');
+  px(tctx,gx+11,gy+8,'#6080ff');
+  // Soul shards floating
+  [[gx-15,gy+10],[gx+30,gy+15],[gx-12,gy+35],[gx+28,gy+30]].forEach(([sx,sy],i)=>{
+    tctx.fillStyle=`hsl(${200+i*20},80%,${60+i*5}%)`;
+    tctx.fillRect(sx,sy,6,8);
+    tctx.fillStyle='rgba(200,230,255,0.5)';
+    tctx.fillRect(sx+1,sy+1,4,6);
+  });
+}
+
+// ── TITLE SCREEN INPUT ────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.code==='Enter'||e.code==='Space'){
+    const title=document.getElementById('title-screen');
+    if(title.style.display!=='none'){
+      title.style.display='none';
+      document.getElementById('game-wrapper').style.display='block';
+      spawnEnemies('world');
+      updateHUD();
+      showMessage('Elder Moreth',[
+        'Welcome, Kael. The world of Aelith grows dim.',
+        'The Goddess\' soul was shattered by the Dark Serpent.',
+        '8 Soul Shards lie hidden across 3 cursed dungeons.',
+        'Visit the town to the west before you venture forth.',
+        '[Arrow Keys: Move] [Z: Sword] [X: Fireball*]',
+        '[E/Enter: Interact] [*Unlock fireball in Dungeon 1]',
+      ], 'Elder Moreth');
+      requestAnimationFrame(gameLoop);
+    }
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────
+setupTitleScreen();
+</script>
+</body>
+</html>
