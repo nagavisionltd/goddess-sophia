@@ -556,6 +556,33 @@ function drawEnemy(ctx, x, y, type, frame, hp, maxHp) {
     // tail
     fillRect(ctx,x+13,y+4+bob,3,5,PAL.ice);
     fillRect(ctx,x+14,y+3+bob,2,2,PAL.ice2);
+  } else if(type==='void_wraith'){
+    // floating dark spirit
+    fillRect(ctx,x+2,y+4+bob,12,8,'#2a1a3a');
+    fillRect(ctx,x+3,y+5+bob,10,6,'#3a2a4a');
+    fillRect(ctx,x+4,y+6+bob,8,4,'#4a3a5a');
+    // glowing eyes
+    px(ctx,x+5,y+6+bob,'#a040ff'); px(ctx,x+10,y+6+bob,'#a040ff');
+    // wispy edges
+    for(let i=0;i<6;i++) px(ctx,x+2+i*2,y+12+bob,'#2a1a3a');
+  } else if(type==='void_lord'){
+    // large final boss
+    fillRect(ctx,x,y,16,16,'#1a0a2a');
+    fillRect(ctx,x+1,y+1,14,14,'#2a1a3a');
+    fillRect(ctx,x+2,y+2,12,12,'#3a2a4a');
+    // crown
+    fillRect(ctx,x+3,y+0,10,3,'#5a3a6a');
+    fillRect(ctx,x+5,y-2,2,3,'#6a4a7a');
+    fillRect(ctx,x+9,y-2,2,3,'#6a4a7a');
+    // glowing red eyes
+    fillRect(ctx,x+4,y+5,3,2,'#ff2040');
+    fillRect(ctx,x+9,y+5,3,2,'#ff2040');
+    // dark aura
+    ctx.strokeStyle='#4a2a5a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x+8,y+8,10+Math.sin(frame*0.1)*2,0,Math.PI*2); ctx.stroke();
+    // arms
+    fillRect(ctx,x-2,y+4+bob,4,10,'#2a1a3a');
+    fillRect(ctx,x+14,y+4+bob,4,10,'#2a1a3a');
   }
   // HP bar above enemy
   const bw=14; const bhp=Math.round(bw*hp/maxHp);
@@ -725,6 +752,35 @@ function drawTile(ctx, x, y, type, frame) {
       fillRect(ctx,x,y,1,TILE,PAL.crystal);
       if((x+y)%32===0){ fillRect(ctx,x+4,y+4,8,8,'#1a3850'); }
       break;
+    case 'void_floor':
+      fillRect(ctx,x,y,TILE,TILE,'#1a0a2a');
+      fillRect(ctx,x,y,TILE,1,'#3a2a4a');
+      fillRect(ctx,x,y,1,TILE,'#3a2a4a');
+      if((x+y)%32===0){ fillRect(ctx,x+6,y+6,4,4,'#2a1a3a'); }
+      break;
+    case 'void_wall':
+      fillRect(ctx,x,y,TILE,TILE,'#2a1a3a');
+      fillRect(ctx,x,y,TILE,1,'#4a3a5a');
+      fillRect(ctx,x,y,1,TILE,'#4a3a5a');
+      fillRect(ctx,x,y+TILE-1,TILE,1,'#1a0a2a');
+      fillRect(ctx,x+TILE-1,y,1,TILE,'#1a0a2a');
+      // dark crystal patterns
+      if((x/16+y/16)%2===0){ fillRect(ctx,x+8,y+8,4,4,'#3a2a4a'); }
+      break;
+    case 'void_pit':
+      fillRect(ctx,x,y,TILE,TILE,'#0a0010');
+      fillRect(ctx,x+2,y+2,TILE-4,TILE-4,'#1a0a2a');
+      // swirling void effect
+      const vo = Math.floor(frame/10)%4;
+      fillRect(ctx,x+vo*2,y+vo*2,4,4,'#2a1a3a');
+      break;
+    case 'dark_crystal':
+      fillRect(ctx,x+4,y+2,8,TILE-4,'#3a1a4a');
+      fillRect(ctx,x+5,y+4,6,TILE-8,'#4a2a5a');
+      fillRect(ctx,x+6,y+6,4,TILE-12,'#5a3a6a');
+      // glow
+      px(ctx,x+7,y+8,'#6a4a7a');
+      break;
     default:
       fillRect(ctx,x,y,TILE,TILE,PAL.void_);
   }
@@ -884,7 +940,7 @@ function fillTileCircle(t,r,c,rad,tile){
 }
 
 // ── SOLID tile check ──────────────────────────────────────
-const SOLID_TILES = new Set(['wall','tree','water','housewall','houseroof','lava','ice']);
+const SOLID_TILES = new Set(['wall','tree','water','housewall','houseroof','lava','ice','void_wall','dark_crystal','void_pit']);
 const WARP_TILES = new Set(['stairsdown','door']);
 
 function isSolid(tileType) { return SOLID_TILES.has(tileType); }
