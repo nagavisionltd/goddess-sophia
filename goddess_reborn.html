@@ -897,7 +897,7 @@ const STATE = {
           swordSwing:0, fireCooldown:0, invincible:0, gold:0, atk:1 },
   shards: [false,false,false,false,false,false,false,false],
   skills: { fireball: false, sword: true },
-  dungeons: { dungeon1:false, dungeon2:false, dungeon3:false },
+  dungeons: { dungeon1:false, dungeon2:false, dungeon3:false, dungeon4:false },
   enemies: [],
   fireballs: [],
   particles: [],
@@ -1114,7 +1114,8 @@ function changeScene(dest, tx, ty) {
   spawnEnemies(dest);
   document.getElementById('area-name').textContent = {
     world:'WORLD MAP', town:'AELITH TOWN',
-    dungeon1:'FOREST TEMPLE', dungeon2:'LAVA CAVERN', dungeon3:'CRYSTAL PALACE'
+    dungeon1:'FOREST TEMPLE', dungeon2:'LAVA CAVERN', dungeon3:'CRYSTAL PALACE',
+    dungeon4:'VOID SANCTUM'
   }[dest] || dest.toUpperCase();
 }
 
