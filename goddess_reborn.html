@@ -556,6 +556,33 @@ function drawEnemy(ctx, x, y, type, frame, hp, maxHp) {
     // tail
     fillRect(ctx,x+13,y+4+bob,3,5,PAL.ice);
     fillRect(ctx,x+14,y+3+bob,2,2,PAL.ice2);
+  } else if(type==='void_wraith'){
+    // floating dark spirit
+    fillRect(ctx,x+2,y+4+bob,12,8,'#2a1a3a');
+    fillRect(ctx,x+3,y+5+bob,10,6,'#3a2a4a');
+    fillRect(ctx,x+4,y+6+bob,8,4,'#4a3a5a');
+    // glowing eyes
+    px(ctx,x+5,y+6+bob,'#a040ff'); px(ctx,x+10,y+6+bob,'#a040ff');
+    // wispy edges
+    for(let i=0;i<6;i++) px(ctx,x+2+i*2,y+12+bob,'#2a1a3a');
+  } else if(type==='void_lord'){
+    // large final boss
+    fillRect(ctx,x,y,16,16,'#1a0a2a');
+    fillRect(ctx,x+1,y+1,14,14,'#2a1a3a');
+    fillRect(ctx,x+2,y+2,12,12,'#3a2a4a');
+    // crown
+    fillRect(ctx,x+3,y+0,10,3,'#5a3a6a');
+    fillRect(ctx,x+5,y-2,2,3,'#6a4a7a');
+    fillRect(ctx,x+9,y-2,2,3,'#6a4a7a');
+    // glowing red eyes
+    fillRect(ctx,x+4,y+5,3,2,'#ff2040');
+    fillRect(ctx,x+9,y+5,3,2,'#ff2040');
+    // dark aura
+    ctx.strokeStyle='#4a2a5a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x+8,y+8,10+Math.sin(frame*0.1)*2,0,Math.PI*2); ctx.stroke();
+    // arms
+    fillRect(ctx,x-2,y+4+bob,4,10,'#2a1a3a');
+    fillRect(ctx,x+14,y+4+bob,4,10,'#2a1a3a');
   }
   // HP bar above enemy
   const bw=14; const bhp=Math.round(bw*hp/maxHp);
@@ -725,6 +752,35 @@ function drawTile(ctx, x, y, type, frame) {
       fillRect(ctx,x,y,1,TILE,PAL.crystal);
       if((x+y)%32===0){ fillRect(ctx,x+4,y+4,8,8,'#1a3850'); }
       break;
+    case 'void_floor':
+      fillRect(ctx,x,y,TILE,TILE,'#1a0a2a');
+      fillRect(ctx,x,y,TILE,1,'#3a2a4a');
+      fillRect(ctx,x,y,1,TILE,'#3a2a4a');
+      if((x+y)%32===0){ fillRect(ctx,x+6,y+6,4,4,'#2a1a3a'); }
+      break;
+    case 'void_wall':
+      fillRect(ctx,x,y,TILE,TILE,'#2a1a3a');
+      fillRect(ctx,x,y,TILE,1,'#4a3a5a');
+      fillRect(ctx,x,y,1,TILE,'#4a3a5a');
+      fillRect(ctx,x,y+TILE-1,TILE,1,'#1a0a2a');
+      fillRect(ctx,x+TILE-1,y,1,TILE,'#1a0a2a');
+      // dark crystal patterns
+      if((x/16+y/16)%2===0){ fillRect(ctx,x+8,y+8,4,4,'#3a2a4a'); }
+      break;
+    case 'void_pit':
+      fillRect(ctx,x,y,TILE,TILE,'#0a0010');
+      fillRect(ctx,x+2,y+2,TILE-4,TILE-4,'#1a0a2a');
+      // swirling void effect
+      const vo = Math.floor(frame/10)%4;
+      fillRect(ctx,x+vo*2,y+vo*2,4,4,'#2a1a3a');
+      break;
+    case 'dark_crystal':
+      fillRect(ctx,x+4,y+2,8,TILE-4,'#3a1a4a');
+      fillRect(ctx,x+5,y+4,6,TILE-8,'#4a2a5a');
+      fillRect(ctx,x+6,y+6,4,TILE-12,'#5a3a6a');
+      // glow
+      px(ctx,x+7,y+8,'#6a4a7a');
+      break;
     default:
       fillRect(ctx,x,y,TILE,TILE,PAL.void_);
   }
@@ -798,6 +854,8 @@ function buildDungeon1() {
   t[11][14]='floor'; t[11][15]='floor'; // top
   t[12][8]='floor'; t[12][9]='floor';   // left
   t[12][22]='floor'; t[12][23]='floor'; // right chest room
+  // Chest in right chamber
+  t[8][27]='chest';
   // Boss room at top
   for(let r=1;r<5;r++) for(let c=10;c<22;c++) t[r][c]='floor';
   return t;
@@ -834,6 +892,22 @@ function buildDungeon3() {
   return t;
 }
 
+// ── DUNGEON 4: Void Sanctum (Final Dungeon) ─────────────────
+function buildDungeon4() {
+  const t = makeBlankMap('void_floor');
+  borderWalls(t,'void_wall');
+  // Spiral layout leading to final boss
+  for(let r=15;r<MAP_ROWS-2;r++) for(let c=10;c<22;c++) t[r][c]='void_floor';
+  for(let r=10;r<16;r++) for(let c=8;c<24;c++) t[r][c]='void_floor';
+  for(let r=5;r<11;r++) for(let c=6;c<26;c++) t[r][c]='void_floor';
+  for(let r=1;r<6;r++) for(let c=4;c<28;c++) t[r][c]='void_floor';
+  // Void pits
+  [[17,12],[17,13],[17,18],[17,19],[12,10],[12,11],[12,20],[12,21],[7,8],[7,9],[7,22],[7,23],[3,6],[3,7],[3,24],[3,25]].forEach(([r,c])=>t[r][c]='void_pit');
+  // Dark crystals blocking paths
+  [[14,14],[14,17],[9,12],[9,19],[4,10],[4,21]].forEach(([r,c])=>t[r][c]='dark_crystal');
+  return t;
+}
+
 function buildTown() {
   const t = makeBlankMap('dirt');
   borderWalls(t,'housewall');
@@ -866,7 +940,7 @@ function fillTileCircle(t,r,c,rad,tile){
 }
 
 // ── SOLID tile check ──────────────────────────────────────
-const SOLID_TILES = new Set(['wall','tree','water','housewall','houseroof','lava','ice']);
+const SOLID_TILES = new Set(['wall','tree','water','housewall','houseroof','lava','ice','void_wall','dark_crystal','void_pit']);
 const WARP_TILES = new Set(['stairsdown','door']);
 
 function isSolid(tileType) { return SOLID_TILES.has(tileType); }
@@ -876,10 +950,10 @@ const STATE = {
   scene: 'world',    // 'world','town','dungeon1','dungeon2','dungeon3'
   prevScene: null,
   hero: { x:14*TILE, y:11*TILE, dir:1, hp:6, maxHp:6, frame:0, speed:2,
-          swordSwing:0, fireCooldown:0, invincible:0, gold:0 },
+          swordSwing:0, fireCooldown:0, invincible:0, gold:0, atk:1 },
   shards: [false,false,false,false,false,false,false,false],
   skills: { fireball: false, sword: true },
-  dungeons: { dungeon1:false, dungeon2:false, dungeon3:false },
+  dungeons: { dungeon1:false, dungeon2:false, dungeon3:false, dungeon4:false },
   enemies: [],
   fireballs: [],
   particles: [],
@@ -902,6 +976,7 @@ const MAPS = {
   dungeon1: buildDungeon1(),
   dungeon2: buildDungeon2(),
   dungeon3: buildDungeon3(),
+  dungeon4: buildDungeon4(),
 };
 
 // ── NPCS ──────────────────────────────────────────────────
@@ -910,15 +985,16 @@ const NPCS_BY_SCENE = {
   town: [
     { x:5*TILE, y:3*TILE, type:'elder', name:'Elder Moreth',
       dialog:['Welcome, young hero. The Goddess Aelith has fallen into endless slumber.',
-              'Her soul shattered into 8 Shards, scattered across three cursed dungeons.',
-              'You must retrieve them all. Begin at the Forest Temple to the north.'] },
+              'Her soul shattered into 8 Shards, scattered across four cursed dungeons.',
+              'You must retrieve them all. Begin at the Forest Temple to the east.'] },
     { x:13*TILE, y:3*TILE, type:'merchant', name:'Bram the Trader',
       dialog:['Aye, strange days. My wares are simple but perhaps useful.',
               'I\'ve heard the Forest Temple holds an ancient fire magic.',
               'Be careful — the Golem inside is no mere obstacle.'] },
     { x:8*TILE, y:17*TILE, type:'innkeeper', name:'Mira',
       dialog:['Rest here weary traveler. The world grows darker each day.',
-              'Come back when your heart is full — we\'ll make sure you\'re ready.'] },
+              'Come back when your heart is full — we\'ll make sure you\'re ready.'],
+      shop:{ heal:{cost:10, effect:'heal'}, upgrade:{cost:100, effect:'atk_up'} } },
   ],
   dungeon1: [
     { x:15*TILE, y:22*TILE, type:'elder', name:'Ancient Spirit',
@@ -928,6 +1004,7 @@ const NPCS_BY_SCENE = {
   ],
   dungeon2: [],
   dungeon3: [],
+  dungeon4: [],
 };
 
 // ── ENEMY SPAWNS ──────────────────────────────────────────
@@ -959,6 +1036,13 @@ function spawnEnemies(scene) {
       {x:22*TILE,y:10*TILE,type:'skeleton',hp:5,maxHp:5,speed:0.8,atk:1},
       {x:16*TILE,y:2*TILE,type:'golem',hp:36,maxHp:36,speed:0.3,atk:3,boss:true},
     ],
+    dungeon4: [
+      {x:12*TILE,y:16*TILE,type:'shadow',hp:10,maxHp:10,speed:1.2,atk:2},
+      {x:20*TILE,y:16*TILE,type:'shadow',hp:10,maxHp:10,speed:1.2,atk:2},
+      {x:10*TILE,y:10*TILE,type:'void_wraith',hp:15,maxHp:15,speed:0.9,atk:2},
+      {x:22*TILE,y:10*TILE,type:'void_wraith',hp:15,maxHp:15,speed:0.9,atk:2},
+      {x:16*TILE,y:2*TILE,type:'void_lord',hp:60,maxHp:60,speed:0.5,atk:4,boss:true},
+    ],
   };
   (spawns[scene]||[]).forEach(s=>STATE.enemies.push({...s,frame:0,hitTimer:0,dead:false,aggro:false}));
 }
@@ -978,6 +1062,8 @@ const WARP_EVENTS = {
       cond:()=>STATE.dungeons.dungeon1, condMsg:'The door won\'t budge. Perhaps another dungeon must be cleared first...' },
     { r:18,c:26, dest:'dungeon3', tx:15*TILE, ty:21*TILE,
       cond:()=>STATE.dungeons.dungeon2, condMsg:'An icy barrier blocks the entrance. Clear the Lava Cavern first.' },
+    { r:24,c:10, dest:'dungeon4', tx:15*TILE, ty:22*TILE,
+      cond:()=>STATE.dungeons.dungeon3, condMsg:'A rift of pure darkness opens... Only those who have conquered all four dungeons may enter.' },
     { r:12,c:1, dest:'town', tx:16*TILE, ty:12*TILE },
   ],
   town: [
@@ -988,12 +1074,17 @@ const WARP_EVENTS = {
   dungeon1: [
     { r:23, c:15, dest:'world', tx:14*TILE, ty:5*TILE },
     { r:23, c:16, dest:'world', tx:14*TILE, ty:5*TILE },
+    // Exit from boss room after defeating golem
+    { r:5, c:15, dest:'world', tx:14*TILE, ty:5*TILE, cond:()=>STATE.dungeons.dungeon1, condMsg:'The exit is sealed until the guardian is defeated...' },
   ],
   dungeon2: [
     { r:23, c:15, dest:'world', tx:22*TILE, ty:10*TILE },
   ],
   dungeon3: [
     { r:23, c:15, dest:'world', tx:26*TILE, ty:19*TILE },
+  ],
+  dungeon4: [
+    { r:23, c:15, dest:'world', tx:10*TILE, ty:24*TILE },
   ],
 };
 
@@ -1079,7 +1170,8 @@ function changeScene(dest, tx, ty) {
   spawnEnemies(dest);
   document.getElementById('area-name').textContent = {
     world:'WORLD MAP', town:'AELITH TOWN',
-    dungeon1:'FOREST TEMPLE', dungeon2:'LAVA CAVERN', dungeon3:'CRYSTAL PALACE'
+    dungeon1:'FOREST TEMPLE', dungeon2:'LAVA CAVERN', dungeon3:'CRYSTAL PALACE',
+    dungeon4:'VOID SANCTUM'
   }[dest] || dest.toUpperCase();
 }
 
@@ -1119,20 +1211,31 @@ function swordHitbox() {
 
 // ── DUNGEON BOSS DEATH → SHARD ─────────────────────────────
 function handleBossDeath(scene) {
-  const shardIdx = {dungeon1:0, dungeon2:2, dungeon3:4}[scene];
+  const shardIdx = {dungeon1:0, dungeon2:2, dungeon3:4, dungeon4:6}[scene];
   if(shardIdx === undefined) return;
   if(!STATE.shards[shardIdx]) {
     STATE.shards[shardIdx] = true;
-    STATE.shards[shardIdx+1] = true; // Each dungeon gives 2 shards
-    STATE.dungeons[scene] = true;
-    STATE.gamePhase = 'dungeon_clear';
-    STATE.dungeonClearTimer = 0;
-    document.getElementById('dungeon-clear').style.display='flex';
-    document.getElementById('shard-name-text').textContent =
-      {dungeon1:'Fire Shards I & II Obtained!',
-       dungeon2:'Lava Shards III & IV Obtained!',
-       dungeon3:'Crystal Shards V & VI Obtained!'}[scene];
-    updateHUD();
+    if(scene === 'dungeon4') {
+      // Final dungeon gives last 2 shards (7 & 8)
+      STATE.shards[shardIdx+1] = true;
+      STATE.dungeons[scene] = true;
+      STATE.gamePhase = 'dungeon_clear';
+      STATE.dungeonClearTimer = 0;
+      document.getElementById('dungeon-clear').style.display='flex';
+      document.getElementById('shard-name-text').textContent = 'Void Shards VII & VIII Obtained! ALL SHARDS COLLECTED!';
+      updateHUD();
+    } else {
+      STATE.shards[shardIdx+1] = true; // Each dungeon gives 2 shards
+      STATE.dungeons[scene] = true;
+      STATE.gamePhase = 'dungeon_clear';
+      STATE.dungeonClearTimer = 0;
+      document.getElementById('dungeon-clear').style.display='flex';
+      document.getElementById('shard-name-text').textContent =
+        {dungeon1:'Fire Shards I & II Obtained!',
+         dungeon2:'Lava Shards III & IV Obtained!',
+         dungeon3:'Crystal Shards V & VI Obtained!'}[scene];
+      updateHUD();
+    }
   }
 }
 
@@ -1213,6 +1316,32 @@ function gameLoop(ts) {
   if(STATE.gamePhase==='playing') updateGame(dt);
   else if(STATE.gamePhase==='message') {
     if(keyPressed('Enter')||keyPressed('Space')) advanceMessage();
+  } else if(STATE.gamePhase==='shop') {
+    if(keyPressed('KeyE')) {
+      // Heal
+      const h=STATE.hero;
+      if(h.gold>=10){
+        h.gold-=10;
+        h.hp=h.maxHp;
+        updateHUD();
+        showMessage('Mira',['You feel refreshed and restored!']);
+        STATE.gamePhase='message';
+      }
+    } else if(keyPressed('KeyR')) {
+      // Upgrade attack
+      const h=STATE.hero;
+      if(h.gold>=100){
+        h.gold-=100;
+        h.atk=(h.atk||1)+1;
+        updateHUD();
+        showMessage('Mira',['Your sword grows stronger with training!']);
+        STATE.gamePhase='message';
+      }
+    } else if(keyPressed('Escape')) {
+      STATE.gamePhase='playing';
+      document.getElementById('message-box').style.display='none';
+      STATE.currentMsg=null;
+    }
   } else if(STATE.gamePhase==='dungeon_clear') {
     STATE.dungeonClearTimer++;
     if(STATE.dungeonClearTimer>60&&(keyPressed('Enter')||keyPressed('Space'))) {
@@ -1274,7 +1403,7 @@ function updateGame(dt) {
     const hb=swordHitbox();
     STATE.enemies.forEach(e=>{
       if(!e.dead&&rectOverlap(hb.x,hb.y,hb.w,hb.h,e.x,e.y,16,16)){
-        e.hp-=2;
+        e.hp-=(h.atk||1)*2;
         e.hitTimer=10;
         spawnHitParticles(e.x+8,e.y+8);
         if(e.hp<=0){
@@ -1378,7 +1507,14 @@ function updateGame(dt) {
     const npcs=NPCS_BY_SCENE[STATE.scene]||[];
     for(const npc of npcs){
       if(Math.abs(h.x-npc.x)<24&&Math.abs(h.y-npc.y)<24){
-        showMessage(npc.name, npc.dialog, npc.type||npc.name);
+        if(npc.shop){
+          // Show shop menu
+          showMessage(npc.name, ['[E] Heal (10g)  [R] Upgrade Attack (100g)  [ESC] Cancel'], npc.type||npc.name);
+          STATE.gamePhase='shop';
+          STATE.currentShop=npc.shop;
+        } else {
+          showMessage(npc.name, npc.dialog, npc.type||npc.name);
+        }
         break;
       }
     }
